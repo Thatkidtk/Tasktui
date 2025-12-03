@@ -572,15 +572,6 @@ class TaskBoardApp(App):
         # Apply appearance settings.
         self.styles.background = self.config.theme.background
         self.styles.color = self.config.theme.text
-        self.stylesheet.set_variables(
-            {
-                "background": self.config.theme.background,
-                "foreground": self.config.theme.text,
-                "primary": self.config.theme.primary,
-                "accent": self.config.theme.accent,
-                "panel": self.config.theme.muted,
-            }
-        )
         self.refresh_views()
         self.timer = self.set_interval(1.0, self.tick_timers)
 

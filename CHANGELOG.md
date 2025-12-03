@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.6 — 2025-02-19
+**Fixes**
+- Rely on `get_css_variables` for theme overrides (no runtime variable wipe), eliminating missing scrollbar/background variables on startup.
+
 ## v0.1.5 — 2025-02-19
 **Fixes**
 - Inject theme colors via `get_css_variables` (background/foreground/scrollbar/etc.), avoiding custom default CSS and ensuring Textual’s defaults parse cleanly on startup.
