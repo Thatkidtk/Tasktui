@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.7 — 2025-02-19
+**Fixes**
+- Checklist refresh now uses unique checkbox ids per render, preventing DuplicateIds crashes when toggling status or re-opening details. Added test coverage for checklist refresh.
+
 ## v0.1.6 — 2025-02-19
 **Fixes**
 - Rely on `get_css_variables` for theme overrides (no runtime variable wipe), eliminating missing scrollbar/background variables on startup.

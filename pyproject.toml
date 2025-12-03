@@ -1,6 +1,6 @@
 [project]
 name = "tasktui"
-version = "0.1.6"
+version = "0.1.7"
 description = "Terminal task board with list, kanban, calendar, and timers"
 readme = "README.md"
 requires-python = ">=3.11"

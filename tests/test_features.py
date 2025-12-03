@@ -5,7 +5,13 @@ from uuid import uuid4
 import pytest
 from textual.app import App
 
-from tasktui.app import DEFAULT_STATUS_LABELS, CalendarView, TaskBoardApp, TaskTable
+from tasktui.app import (
+    DEFAULT_STATUS_LABELS,
+    CalendarView,
+    DetailPanel,
+    TaskBoardApp,
+    TaskTable,
+)
 from tasktui.config import AppConfig
 from tasktui.models import ChecklistItem, Task
 
@@ -79,3 +85,21 @@ def test_tick_timers_pauses_at_zero_and_saves_once(tmp_path) -> None:
     assert config.data_path.exists()
     saved = json.loads(config.data_path.read_text())
     assert saved[0]["remaining_seconds"] == 0
+
+
+@pytest.mark.asyncio
+async def test_checklist_refresh_does_not_duplicate_ids() -> None:
+    class PanelApp(App):
+        def compose(self):
+            yield DetailPanel()
+
+    task = _task(
+        "with checklist",
+        checklist=[ChecklistItem("a"), ChecklistItem("b")],
+        remaining_seconds=10,
+    )
+    async with PanelApp().run_test() as pilot:
+        panel = pilot.app.query_one(DetailPanel)
+        panel.update_task(task, DEFAULT_STATUS_LABELS)
+        # Re-render with the same task; should not raise DuplicateIds.
+        panel.update_task(task, DEFAULT_STATUS_LABELS)

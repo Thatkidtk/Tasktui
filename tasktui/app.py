@@ -249,7 +249,9 @@ class DetailPanel(Static):
         yield self.checklist_container
 
     def update_task(self, task: Optional[Task], status_labels: dict[str, str]) -> None:
-        self.checklist_container.remove_children()
+        # Remove any existing checklist widgets to avoid duplicate ids on refresh.
+        for child in list(self.checklist_container.children):
+            child.remove()
         if not task:
             self.meta_log.clear()
             self.meta_log.write("Select a task to see details.")
@@ -273,7 +275,7 @@ class DetailPanel(Static):
             checkbox = Checkbox(
                 item.label,
                 value=item.done,
-                id=f"check-{task.id}-{index}",
+                id=f"check-{task.id}-{index}-{uuid4()}",
             )
             self.checklist_container.mount(checkbox)
 
