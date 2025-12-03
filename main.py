@@ -1,6 +1,6 @@
-from over_ssh.app import TaskBoardApp
-from over_ssh.config import load_config
-from over_ssh.storage import load_tasks
+from tasktui.app import TaskBoardApp
+from tasktui.config import load_config
+from tasktui.storage import load_tasks
 
 
 def main() -> None:
