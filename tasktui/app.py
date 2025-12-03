@@ -474,7 +474,7 @@ class TaskBoardApp(App):
     .board-column {
         width: 1fr;
         min-width: 26;
-        border: solid $primary 1px;
+        border: solid $primary;
         padding: 1 1;
         margin: 0 1;
     }
@@ -485,7 +485,7 @@ class TaskBoardApp(App):
     .dialog {
         width: 60%;
         max-width: 80;
-        border: solid $accent 1px;
+        border: solid $accent;
         padding: 1;
         background: $panel;
     }

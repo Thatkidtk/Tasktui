@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.1 — 2025-02-19
+**Fixes**
+- Adjust Textual CSS to use valid border syntax (fixes startup error after pipx install).
+
 ## v0.1.0 — 2024-12-XX
 **Highlights**
 - First tagged release of Tasktui (Textual-based TUI) with list, kanban board, calendar, and detail tabs.
