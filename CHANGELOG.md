@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.3 — 2025-02-19
+**Fixes**
+- Provide default CSS variables (`background`, `foreground`, scrollbar colors, etc.) via `DEFAULT_CSS` so Textual’s built-in styles parse cleanly on startup before theme overrides are applied.
+
 ## v0.1.2 — 2025-02-19
 **Fixes**
 - Preserve Textual default variables by setting `background`/`foreground` alongside theme colors (fixes missing `$background` error at startup).
