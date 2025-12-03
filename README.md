@@ -11,7 +11,7 @@ Textual-based TUI with list, kanban, calendar, and detail views plus tags, check
 
 ## Install
 ```bash
-pipx install git+https://github.com/Thatkidtk/Tasktui.git@v0.1.3  # tagged release
+pipx install git+https://github.com/Thatkidtk/Tasktui.git@v0.1.4  # tagged release
 # or the latest main branch
 pipx install git+https://github.com/Thatkidtk/Tasktui.git
 # or with uv

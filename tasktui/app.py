@@ -467,18 +467,16 @@ class HelpModal(ModalScreen[None]):
 class TaskBoardApp(App):
     """Main task tracker app."""
 
-    DEFAULT_CSS = """
-    :root {
-        background: #0d1117;
-        foreground: #c9d1d9;
-        primary: #58a6ff;
-        accent: #ff7b72;
-        panel: #30363d;
-        scrollbar-background: #30363d;
-        scrollbar-background-hover: #3a3f47;
-        scrollbar-background-active: #4a4f57;
-    }
-    """
+    DEFAULT_CSS = """:root {
+    background: #0d1117;
+    foreground: #c9d1d9;
+    primary: #58a6ff;
+    accent: #ff7b72;
+    panel: #30363d;
+    scrollbar-background: #30363d;
+    scrollbar-background-hover: #3a3f47;
+    scrollbar-background-active: #4a4f57;
+}"""
 
     CSS = """
     Screen {
