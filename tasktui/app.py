@@ -467,17 +467,6 @@ class HelpModal(ModalScreen[None]):
 class TaskBoardApp(App):
     """Main task tracker app."""
 
-    DEFAULT_CSS = """:root {
-    background: #0d1117;
-    foreground: #c9d1d9;
-    primary: #58a6ff;
-    accent: #ff7b72;
-    panel: #30363d;
-    scrollbar-background: #30363d;
-    scrollbar-background-hover: #3a3f47;
-    scrollbar-background-active: #4a4f57;
-}"""
-
     CSS = """
     Screen {
         overflow: hidden;
@@ -534,8 +523,8 @@ class TaskBoardApp(App):
     TIMER_SAVE_INTERVAL = 5.0
 
     def __init__(self, config: AppConfig, tasks: List[Task]) -> None:
-        super().__init__()
         self.config = config
+        super().__init__()
         self.tasks: List[Task] = tasks
         self.tag_filter: Optional[str] = None
         self.selected_task_id: Optional[str] = tasks[0].id if tasks else None
@@ -549,6 +538,22 @@ class TaskBoardApp(App):
         )
         self.timer: Timer | None = None
         self._last_timer_save = monotonic()
+
+    def get_css_variables(self) -> dict[str, str]:
+        variables = super().get_css_variables()
+        variables.update(
+            {
+                "background": self.config.theme.background,
+                "foreground": self.config.theme.text,
+                "primary": self.config.theme.primary,
+                "accent": self.config.theme.accent,
+                "panel": self.config.theme.muted,
+                "scrollbar-background": self.config.theme.muted,
+                "scrollbar-background-hover": self.config.theme.muted,
+                "scrollbar-background-active": self.config.theme.muted,
+            }
+        )
+        return variables
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)

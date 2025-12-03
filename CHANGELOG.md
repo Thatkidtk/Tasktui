@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.5 — 2025-02-19
+**Fixes**
+- Inject theme colors via `get_css_variables` (background/foreground/scrollbar/etc.), avoiding custom default CSS and ensuring Textual’s defaults parse cleanly on startup.
+
 ## v0.1.4 — 2025-02-19
 **Fixes**
 - Make default CSS variables parseable (`:root { ... }` without leading whitespace) so the app starts cleanly on Textual 6.x.
