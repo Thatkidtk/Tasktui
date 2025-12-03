@@ -12,15 +12,15 @@ class AppLogicTests(unittest.TestCase):
         self.tempdir = tempfile.TemporaryDirectory()
         self.addCleanup(self.tempdir.cleanup)
         self.env_patch = mock.patch.dict(
-            os.environ, {"OVER_SSH_HOME": self.tempdir.name}
+            os.environ, {"TASKTUI_HOME": self.tempdir.name, "OVER_SSH_HOME": ""}
         )
         self.env_patch.start()
         self.addCleanup(self.env_patch.stop)
-        for mod in ["over_ssh.config", "over_ssh.storage", "over_ssh.app"]:
+        for mod in ["tasktui.config", "tasktui.storage", "tasktui.app"]:
             if mod in sys.modules:
                 del sys.modules[mod]
-        self.config = importlib.import_module("over_ssh.config")
-        self.app_mod = importlib.import_module("over_ssh.app")
+        self.config = importlib.import_module("tasktui.config")
+        self.app_mod = importlib.import_module("tasktui.app")
 
     def test_next_status_cycles(self) -> None:
         next_status = self.app_mod.next_status

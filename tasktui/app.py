@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import calendar
-from datetime import date, datetime
+from datetime import date
+from time import monotonic
 from uuid import uuid4
 from typing import Iterable, List, Optional
 
@@ -9,8 +10,8 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical, VerticalScroll
 from textual.message import Message
-from textual.reactive import reactive
 from textual.screen import ModalScreen
+from textual.timer import Timer
 from textual.widgets import (
     Button,
     Checkbox,
@@ -28,7 +29,7 @@ from textual.widgets import (
 )
 
 from .config import AppConfig
-from .models import ChecklistItem, Task
+from .models import Task
 from .storage import save_tasks
 
 
@@ -73,7 +74,7 @@ class TaskTable(Static):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.table = DataTable(zebra_stripes=True)
+        self.table: DataTable = DataTable(zebra_stripes=True)
 
     def compose(self) -> ComposeResult:
         self.table.add_columns("Title", "Status", "Tags", "Due")
@@ -152,7 +153,7 @@ class KanbanBoard(VerticalScroll):
                     self.column_views.append(list_view)
                     yield list_view
 
-    def refresh(
+    def refresh_board(
         self,
         tasks: Iterable[Task],
         selected: Optional[str],
@@ -161,7 +162,7 @@ class KanbanBoard(VerticalScroll):
     ) -> None:
         for list_view in self.column_views:
             list_view.clear()
-        by_status = {column: [] for column in self.columns}
+        by_status: dict[str, list[Task]] = {column: [] for column in self.columns}
         for task in tasks:
             if task.status not in by_status:
                 continue
@@ -169,6 +170,8 @@ class KanbanBoard(VerticalScroll):
                 continue
             by_status[task.status].append(task)
         for heading, list_view in zip(self.headings, self.column_views):
+            if not list_view.id:
+                continue
             column = list_view.id.replace("column-", "")
             for task in by_status.get(column, []):
                 card = TaskCard(task)
@@ -187,6 +190,10 @@ class KanbanBoard(VerticalScroll):
 
 class CalendarView(Static):
     """Compact month calendar with due tasks."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.last_render: str = ""
 
     def update_calendar(
         self, tasks: Iterable[Task], reference: Optional[date] = None
@@ -217,7 +224,9 @@ class CalendarView(Static):
                 tags = ", ".join(task.tags) if task.tags else "no tags"
                 lines.append(f"{day:02d} {task.title} [{tags}]")
 
-        self.update("\n".join(lines))
+        calendar_text = "\n".join(lines)
+        self.last_render = calendar_text
+        self.update(calendar_text)
 
 
 class DetailPanel(Static):
@@ -240,7 +249,7 @@ class DetailPanel(Static):
         yield self.checklist_container
 
     def update_task(self, task: Optional[Task], status_labels: dict[str, str]) -> None:
-        self.checklist_container.clear()
+        self.checklist_container.remove_children()
         if not task:
             self.meta_log.clear()
             self.meta_log.write("Select a task to see details.")
@@ -283,16 +292,16 @@ class AddTaskModal(ModalScreen[Optional[Task]]):
 
     def compose(self) -> ComposeResult:
         presets_text = ", ".join(str(p) for p in self.presets) if self.presets else "—"
+        countdown_placeholder = (
+            f"Countdown minutes (default {self.default_minutes}, presets: {presets_text})"
+        )
         yield Container(
             Label("New Task", classes="dialog-heading"),
             Input(placeholder="Title", id="title"),
             Input(placeholder="Description (optional)", id="description"),
             Input(placeholder="Tags (comma separated)", id="tags"),
             Input(placeholder="Due date (YYYY-MM-DD)", id="due"),
-            Input(
-                placeholder=f"Countdown minutes (default {self.default_minutes}, presets: {presets_text})",
-                id="countdown",
-            ),
+            Input(placeholder=countdown_placeholder, id="countdown"),
             Horizontal(
                 *[
                     Button(f"{preset}m", id=f"preset-{preset}", variant="primary")
@@ -424,6 +433,37 @@ class TimerPresetModal(ModalScreen[Optional[int]]):
             self.dismiss(None)
 
 
+class HelpModal(ModalScreen[None]):
+    """Modal showing available keybindings."""
+
+    def __init__(self, bindings: list[Binding]) -> None:
+        super().__init__()
+        self._binding_list: list[Binding] = bindings
+
+    def compose(self) -> ComposeResult:
+        rows = [("Tab", "Switch views (List, Board, Calendar, Details)")]
+        for binding in self._binding_list:
+            if binding.show is False:
+                continue
+            key = binding.key or ""
+            desc = binding.description or binding.action.replace("_", " ")
+            rows.append((key, desc))
+        body = "\n".join(f"{key:<8} {desc}" for key, desc in rows)
+        yield Container(
+            Label("Help / Keybindings", classes="dialog-heading"),
+            Static(body, classes="dialog-body", markup=False),
+            Horizontal(
+                Button("Close", id="close", variant="primary"),
+                classes="dialog-actions",
+            ),
+            classes="dialog",
+        )
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "close":
+            self.dismiss(None)
+
+
 class TaskBoardApp(App):
     """Main task tracker app."""
 
@@ -449,6 +489,9 @@ class TaskBoardApp(App):
         padding: 1;
         background: $panel;
     }
+    .dialog-body {
+        padding: 1 0 1 0;
+    }
     .dialog-actions {
         width: 100%;
         padding-top: 1;
@@ -473,8 +516,11 @@ class TaskBoardApp(App):
         Binding("p", "set_timer_preset", "Timer preset"),
         Binding("f", "filter_tag", "Filter tags"),
         Binding("d", "show_details", "Details tab"),
+        Binding("?", "show_help", "Help"),
         Binding("q", "quit", "Quit"),
     ]
+
+    TIMER_SAVE_INTERVAL = 5.0
 
     def __init__(self, config: AppConfig, tasks: List[Task]) -> None:
         super().__init__()
@@ -490,7 +536,8 @@ class TaskBoardApp(App):
         self.default_timer_minutes: int = (
             config.default_timer_minutes if config.default_timer_minutes > 0 else 25
         )
-        self.timer = None
+        self.timer: Timer | None = None
+        self._last_timer_save = monotonic()
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -509,9 +556,9 @@ class TaskBoardApp(App):
         # Apply appearance settings.
         self.styles.background = self.config.theme.background
         self.styles.color = self.config.theme.text
-        self.set_variable("primary", self.config.theme.primary)
-        self.set_variable("accent", self.config.theme.accent)
-        self.set_variable("panel", self.config.theme.muted)
+        self.set_variable("primary", self.config.theme.primary)  # type: ignore[attr-defined]
+        self.set_variable("accent", self.config.theme.accent)  # type: ignore[attr-defined]
+        self.set_variable("panel", self.config.theme.muted)  # type: ignore[attr-defined]
         self.refresh_views()
         self.timer = self.set_interval(1.0, self.tick_timers)
 
@@ -524,7 +571,7 @@ class TaskBoardApp(App):
         table.update_rows(
             self.tasks, self.selected_task_id, self.tag_filter, self.status_labels
         )
-        board.refresh(
+        board.refresh_board(
             self.tasks, self.selected_task_id, self.tag_filter, self.status_labels
         )
         calendar_view.update_calendar(self.tasks)
@@ -625,6 +672,10 @@ class TaskBoardApp(App):
         tabs = self.query_one("#tabs", TabbedContent)
         tabs.active = "details"
 
+    def action_show_help(self) -> None:
+        bindings = [b for b in self.BINDINGS if isinstance(b, Binding)]
+        self.push_screen(HelpModal(bindings))
+
     def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
         checkbox_id = event.checkbox.id or ""
         parts = checkbox_id.split("-")
@@ -645,12 +696,18 @@ class TaskBoardApp(App):
 
     def tick_timers(self) -> None:
         changed = False
+        hit_zero = False
         for task in self.tasks:
             if task.timer_running and task.remaining_seconds > 0:
                 task.remaining_seconds -= 1
                 changed = True
                 if task.remaining_seconds <= 0:
                     task.timer_running = False
+                    hit_zero = True
         if changed:
-            save_tasks(self.tasks, data_path=self.config.data_path)
+            now = monotonic()
+            should_save = hit_zero or (now - self._last_timer_save) >= self.TIMER_SAVE_INTERVAL
+            if should_save:
+                save_tasks(self.tasks, data_path=self.config.data_path)
+                self._last_timer_save = now
             self.refresh_views()

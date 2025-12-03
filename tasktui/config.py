@@ -8,10 +8,16 @@ import tomllib
 
 
 def _config_dir() -> Path:
-    env_dir = os.environ.get("OVER_SSH_HOME")
+    env_dir = os.environ.get("TASKTUI_HOME") or os.environ.get("OVER_SSH_HOME")
     if env_dir:
         return Path(env_dir).expanduser()
-    return Path.home() / ".over-ssh"
+    new_default = Path.home() / ".tasktui"
+    legacy_default = Path.home() / ".over-ssh"
+    # Prefer the new location, but if a legacy directory exists and the new one
+    # does not, keep using the legacy path for backward compatibility.
+    if not new_default.exists() and legacy_default.exists():
+        return legacy_default
+    return new_default
 
 
 CONFIG_DIR = _config_dir()
@@ -55,7 +61,7 @@ def ensure_config_file(path: Path = DEFAULT_CONFIG_PATH) -> None:
         return
     starter = textwrap.dedent(
         f"""
-        # Terminal task tracker config
+        # Tasktui configuration
         [app]
         default_view = "board"  # options: board, list, calendar, details
         data_path = "{DEFAULT_TASK_PATH.as_posix()}"

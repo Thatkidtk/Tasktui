@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List
 from uuid import uuid4
 
-from .config import CONFIG_DIR, DEFAULT_TASK_PATH
+from .config import DEFAULT_TASK_PATH
 from .models import Task, ChecklistItem
 
 

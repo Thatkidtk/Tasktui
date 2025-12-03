@@ -1,41 +1,61 @@
-## Terminal task tracker
+# Tasktui
 
-Textual-based TUI with list, kanban, calendar, and detail views, tags, checklists, and per-task countdown timers. A small config file lets you pick themes and defaults after install.
+Textual-based TUI with list, kanban, calendar, and detail views plus tags, checklists, due dates, and per-task countdown timers. Python 3.11+.
 
-### Quick start
+## Features
+- List, kanban, calendar, and detail tabs with quick switching via `Tab`
+- Tags, checklists, due dates, and configurable status columns/labels
+- Countdown timers with presets and auto-pause at zero (state is saved every few seconds)
+- Themeable colors and layout defaults via a small `config.toml`
+- Safe storage: JSON backed up on corruption; override data dir with `TASKTUI_HOME`
 
+## Install
 ```bash
-pip install -e .
+pipx install git+https://github.com/Thatkidtk/Tasktui.git@v0.1.0  # tagged release
+# or the latest main branch
+pipx install git+https://github.com/Thatkidtk/Tasktui.git
+# or with uv
+uv tool install .
+# or editable dev install
+pip install -e ".[dev]"
+```
+
+## Run
+```bash
+tasktui
+# or
+python -m tasktui
+# or
 python main.py
 ```
 
-The app writes two files to `~/.over-ssh/` the first time it runs:
-- `config.toml` — appearance and layout defaults you can tweak.
-- `tasks.json` — your data store. Edit by hand or through the TUI.
-
-### Controls
-
-- `Tab` switch between views (List, Board, Calendar, Details)
+## Controls
+- `Tab` switch views (List, Board, Calendar, Details)
 - `a` add a new task
 - `s` move the selected task to the next column
-- `c` mark selected task as the last column (done)
-- `p` apply a timer preset to the selected task
-- `t` start/pause the task timer
-- `r` reset the task timer to its default countdown
+- `c` mark the selected task as done (last column)
+- `p` apply a timer preset
+- `t` start/pause the timer
+- `r` reset the timer to its default countdown
 - `f` filter by tag (blank to clear)
-- `d` jump to the Details tab
+- `d` jump to Details
+- `?` open the in-app help overlay
 - `q` quit
 
 Checklist items are toggled directly in the Details tab.
 
-### Configuration
+## Config and data
+The app writes to `~/.tasktui/` on first run:
+- `config.toml` — appearance and layout defaults
+- `tasks.json` — your data store
 
-`~/.over-ssh/config.toml` is created with sensible defaults:
+Set `TASKTUI_HOME=/tmp/tasktui-demo` (or any path) to isolate config/data for demos or tests. The old `OVER_SSH_HOME` still works as a legacy fallback.
 
+Example defaults:
 ```toml
 [app]
 default_view = "board"          # list, board, calendar, or details
-data_path = "/home/you/.over-ssh/tasks.json"
+data_path = "/home/you/.tasktui/tasks.json"
 board_columns = ["backlog", "in_progress", "done"]
 status_labels = {backlog = "Backlog", in_progress = "In Progress", done = "Done"}
 timer_presets = [5, 15, 25, 50]  # minutes
@@ -50,21 +70,11 @@ muted = "#30363d"
 text = "#c9d1d9"
 ```
 
-Adjust colors, default view, and board columns to match your style.
-Add more board columns and labels for a custom workflow, and tweak timer presets to fit your cadence (e.g., `[10, 30, 90]`).
+Adjust colors, default view, and board columns to match your workflow.
 
-Tip: set `OVER_SSH_HOME=/tmp/over-ssh-demo` (or any path) to isolate config/data for experiments or tests.
-
-### Views
-
-- **List**: sortable table with tags and due dates.
-- **Board**: kanban-style columns driven by `board_columns`.
-- **Calendar**: monthly grid highlighting due tasks.
-- **Details**: task summary, tags, checklist toggles, and countdown timer state.
-
-Timers tick once per second; when a countdown hits zero, it pauses automatically. Every change saves back to `tasks.json`.
-# Tasktui
-# Tasktui
-# Tasktui
-# Tasktui
-# Tasktui
+## Development
+```bash
+pip install -e ".[dev]"
+pre-commit install
+pytest
+```

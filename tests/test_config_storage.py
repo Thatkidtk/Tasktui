@@ -12,15 +12,18 @@ class ConfigStorageTests(unittest.TestCase):
         self.tempdir = tempfile.TemporaryDirectory()
         self.addCleanup(self.tempdir.cleanup)
         self.home = Path(self.tempdir.name)
-        self.env_patch = mock.patch.dict(os.environ, {"OVER_SSH_HOME": str(self.home)})
+        self.env_patch = mock.patch.dict(
+            os.environ,
+            {"TASKTUI_HOME": str(self.home), "OVER_SSH_HOME": ""},
+        )
         self.env_patch.start()
         self.addCleanup(self.env_patch.stop)
-        # Reload modules so they pick up the new OVER_SSH_HOME.
-        for mod in ["over_ssh.config", "over_ssh.storage"]:
+        # Reload modules so they pick up the new TASKTUI_HOME.
+        for mod in ["tasktui.config", "tasktui.storage"]:
             if mod in sys.modules:
                 del sys.modules[mod]
-        self.config = importlib.import_module("over_ssh.config")
-        self.storage = importlib.import_module("over_ssh.storage")
+        self.config = importlib.import_module("tasktui.config")
+        self.storage = importlib.import_module("tasktui.storage")
 
     def test_config_respects_env_and_creates_file(self) -> None:
         cfg_path = self.config.DEFAULT_CONFIG_PATH
