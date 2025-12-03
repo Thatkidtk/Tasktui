@@ -3,6 +3,7 @@
 ## v0.1.1 — 2025-02-19
 **Fixes**
 - Adjust Textual CSS to use valid border syntax (fixes startup error after pipx install).
+- Set CSS variables via stylesheet API for compatibility with Textual 6.x.
 
 ## v0.1.0 — 2024-12-XX
 **Highlights**
