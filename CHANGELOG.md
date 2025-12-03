@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.2 — 2025-02-19
+**Fixes**
+- Preserve Textual default variables by setting `background`/`foreground` alongside theme colors (fixes missing `$background` error at startup).
+
 ## v0.1.1 — 2025-02-19
 **Fixes**
 - Adjust Textual CSS to use valid border syntax (fixes startup error after pipx install).

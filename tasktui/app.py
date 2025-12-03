@@ -558,6 +558,8 @@ class TaskBoardApp(App):
         self.styles.color = self.config.theme.text
         self.stylesheet.set_variables(
             {
+                "background": self.config.theme.background,
+                "foreground": self.config.theme.text,
                 "primary": self.config.theme.primary,
                 "accent": self.config.theme.accent,
                 "panel": self.config.theme.muted,
